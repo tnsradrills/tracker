@@ -1,26 +1,40 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div>
+    <h1>Users</h1>
+    <!-- <form @submit.prevent="addTodo">
+      <input v-model="newTodo" placeholder="New todo" />
+      <button>Add</button>
+    </form> -->
+    <ul v-if="!loading">
+      <li v-for="user in users" :key="user.id">
+        {{ user.discord_name }}
+      </li>
+    </ul>
+  </div>
 </template>
 
-<script>
-import HelloWorld from './components/HelloWorld.vue'
-
-export default {
-  name: 'App',
-  components: {
-    HelloWorld
+<script setup>
+import { ref, onMounted } from "vue";
+import { supabase } from "../src/supabase";
+const users = ref([]);
+const loading = ref(true);
+const fetchUsers = async () => {
+  const { data, error } = await supabase.from("users").select("*").order("id");
+  if (error) {
+    console.error(error);
+  } else {
+    users.value = data;
+    loading.value = false;
   }
-}
-</script>
+};
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
-</style>
+// const addTodo = async () => {
+//   if (!newTodo.value) return;
+//   const { error } = await supabase.from('todos').insert([{ title: newTodo.value }]);
+//   if (error) console.error(error);
+//   newTodo.value = '';
+//   fetchTodos();
+// };
+
+onMounted(fetchUsers);
+</script>
