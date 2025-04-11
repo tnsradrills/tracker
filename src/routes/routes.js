@@ -1,11 +1,11 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from "vue-router";
 
-import LandingPage from '@/views/LandingPage.vue';
-
+import LandingPage from "@/views/LandingPage.vue";
+import DashboardPage from "@/views/DashboardPage.vue";
 const routes = [
   {
-    path: '/',
-    name: 'Welcome',
+    path: "/",
+    name: "Welcome",
     component: LandingPage,
   },
   // {
@@ -13,11 +13,11 @@ const routes = [
   //   name: 'Login',
   //   component: Login,
   // },
-  // {
-  //   path: '/dashboard',
-  //   name: 'Dashboard',
-  //   component: Dashboard,
-  // },
+  {
+    path: "/dashboard",
+    name: "Dashboard",
+    component: DashboardPage,
+  },
 ];
 
 const router = createRouter({
