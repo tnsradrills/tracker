@@ -16,6 +16,8 @@ const rules = reactive({
   pass: [(v) => !!v || "Your password is required."],
 });
 
+const revealPass = ref(false);
+
 const tryLogin = async () => {
   if (!loginForm.value.validate()) {
     return;
@@ -49,9 +51,13 @@ const tryLogin = async () => {
               <v-text-field
                 v-model="password"
                 label="Password"
-                type="password"
+                :type="revealPass ? 'text' : 'password'"
                 prepend-inner-icon="mdi-lock"
                 :rules="rules.pass"
+                :append-inner-icon="
+                  revealPass ? 'mdi mdi-eye-closed' : 'mdi mdi-eye-outline'
+                "
+                @click:append-inner="revealPass = !revealPass"
               />
             </v-col>
           </v-row>

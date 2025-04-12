@@ -5,7 +5,6 @@ export const useUserStore = defineStore("user", () => {
   const userData = reactive({
     id: null,
     display_name: null,
-    discord_username: null,
     region_id: null,
     qual_runs: [],
   });
@@ -13,10 +12,11 @@ export const useUserStore = defineStore("user", () => {
   const loginUser = async (discordName, password) => {
     const fakeEmail = `${discordName}@placeholder.xyz`;
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: fakeEmail,
-      password: password,
-    });
+    const { data: authData, error: signInError } =
+      await supabase.auth.signInWithPassword({
+        email: fakeEmail,
+        password: password,
+      });
 
     if (signInError) {
       if (signInError.code == "invalid_credentials") {
@@ -31,6 +31,11 @@ export const useUserStore = defineStore("user", () => {
         };
       }
     }
+
+    userData.id = authData.user.id;
+    //fetch the user data we need now
+    await fetchProfile();
+
     return { success: true };
   };
 
@@ -84,11 +89,44 @@ export const useUserStore = defineStore("user", () => {
 
     userData.id = userId;
     userData.display_name = displayName;
-    userData.discord_username = discordName;
     userData.region_id = regionId;
     userData.qual_runs = [];
 
     return { success: true };
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    userData.id = null;
+    userData.display_name = null;
+    userData.discord_username = null;
+    userData.region_id = null;
+    userData.qual_runs = [];
+    return { success: true };
+  };
+
+  const initAuth = async () => {
+    const { data } = await supabase.auth.getSession();
+    const session = data.session;
+
+    if (session && session.user) {
+      userData.id = session.user.id;
+      await fetchProfile();
+    }
+  };
+
+  const fetchProfile = async () => {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("display_name, region")
+      .eq("id", userData.id)
+      .single();
+
+    if (!error && profile) {
+      userData.display_name = profile.display_name;
+      userData.region_id = profile.region;
+      userData.qual_runs = [];
+    }
   };
 
   const retrieveUserData = () => {};
@@ -98,6 +136,8 @@ export const useUserStore = defineStore("user", () => {
     //functions
     loginUser,
     signupUser,
+    signOut,
+    initAuth,
     retrieveUserData,
   };
 });
