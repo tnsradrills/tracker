@@ -30,7 +30,7 @@ const averageTime = computed(() => {
   return totalExercises ? (totalTime / totalExercises).toFixed(2) : 0;
 });
 
-const averageHitFactor = computed(() => {
+const averageEfficiency = computed(() => {
   const runs = userStore.userData.runs ?? [];
   const filteredRuns =
     viewingGroup.value === 0
@@ -39,20 +39,27 @@ const averageHitFactor = computed(() => {
 
   if (!filteredRuns.length) return 0;
 
-  let totalScore = 0;
-  let totalTime = 0;
+  let totalEfficiency = 0;
+  let count = 0;
 
   filteredRuns.forEach((run) => {
     run.run_results.forEach((result) => {
+      const max = result.exercises?.max_points;
       const par = result.exercises?.par_time;
-      if (par !== null && par !== undefined) {
-        totalScore += result.score;
-        totalTime += result.time_taken;
+      const score = result.score;
+      const time = result.time_taken;
+
+      if (max && par && time > 0) {
+        const scoreRatio = score / max;
+        const timeRatio = par / time;
+        const efficiency = scoreRatio * timeRatio * 100;
+        totalEfficiency += efficiency;
+        count++;
       }
     });
   });
 
-  return totalTime > 0 ? (totalScore / totalTime).toFixed(2) : 0;
+  return count > 0 ? (totalEfficiency / count).toFixed(1) : "N/A";
 });
 
 const runSummaryRows = computed(() => {
@@ -133,10 +140,10 @@ onMounted(() => {
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
             <div class="text-h6 text-center">
-              Average Hit Factor Across All Runs
+              Average Efficiency Score Across All Runs
             </div>
             <div class="text-h4 font-weight-bold text-center">
-              {{ averageHitFactor }}
+              {{ averageEfficiency }}
             </div>
           </v-card>
         </v-col>

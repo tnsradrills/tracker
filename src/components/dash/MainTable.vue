@@ -16,7 +16,6 @@ const headers = [
   { title: "Exercise Group", value: "group_name" },
   { title: "Avg Efficiency On Run", value: "efficiency_score" },
   { title: "Total Score", value: "total_score" },
-  { title: "Total Hit Factor", value: "total_hit_factor" },
 ];
 
 const expandedTableRows = ref([]);
@@ -52,7 +51,6 @@ const expandedTableRows = ref([]);
                     { title: 'Exercise', value: 'name' },
                     { title: 'Score', value: 'score' },
                     { title: 'Time Taken', value: 'time_taken' },
-                    { title: 'Hit Factor', value: 'hit_factor' },
                     { title: 'Efficiency', value: 'efficiency' },
                   ]"
                   class="elevation-1"
@@ -78,9 +76,6 @@ const expandedTableRows = ref([]);
                         : item.time_taken.toFixed(2)
                     }}
                     seconds
-                  </template>
-                  <template #item.hit_factor="{ item }">
-                    {{ item.hit_factor }}
                   </template>
                 </v-data-table>
               </v-card-text>
