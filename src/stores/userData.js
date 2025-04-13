@@ -1,12 +1,13 @@
 import { defineStore } from "pinia";
-import { reactive } from "vue";
+import { reactive, computed } from "vue";
 import { supabase } from "./supabase.js";
 export const useUserStore = defineStore("user", () => {
   const userData = reactive({
     id: null,
+    alt: null,
     display_name: null,
     region_id: null,
-    qual_runs: [],
+    runs: [],
   });
 
   const loginUser = async (discordName, password) => {
@@ -90,7 +91,7 @@ export const useUserStore = defineStore("user", () => {
     userData.id = userId;
     userData.display_name = displayName;
     userData.region_id = regionId;
-    userData.qual_runs = [];
+    userData.runs = [];
 
     return { success: true };
   };
@@ -101,7 +102,7 @@ export const useUserStore = defineStore("user", () => {
     userData.display_name = null;
     userData.discord_username = null;
     userData.region_id = null;
-    userData.qual_runs = [];
+    userData.runs = [];
     return { success: true };
   };
 
@@ -118,18 +119,66 @@ export const useUserStore = defineStore("user", () => {
   const fetchProfile = async () => {
     const { data: profile, error } = await supabase
       .from("users")
-      .select("display_name, region")
+      .select("display_name, region, alt_id")
       .eq("id", userData.id)
       .single();
 
     if (!error && profile) {
       userData.display_name = profile.display_name;
       userData.region_id = profile.region;
-      userData.qual_runs = [];
+      userData.alt = profile.alt_id;
     }
+    const { data: runsData } = await supabase
+      .from("user_runs")
+      .select(
+        `
+      id,
+      exercise_group_id,
+      created_at,
+      notes,
+      exercise_groups ( name ),
+      run_results (
+        id,
+        score,
+        time_taken,
+        hit_zone,
+        exercise_id,
+        exercises (
+          name,
+          "order"
+        )
+      )
+    `
+      )
+      .eq("alt_user_id", userData.alt)
+      .order("created_at", { ascending: false });
+
+    const groupedRuns = {};
+
+    runsData.forEach((run) => {
+      const groupId = run.group_id;
+      if (!groupedRuns[groupId]) {
+        groupedRuns[groupId] = {
+          group_name: run.exercise_groups?.name || "Unknown Group",
+          runs: [],
+        };
+      }
+      if (groupedRuns[groupId].runs.length < 10) {
+        groupedRuns[groupId].runs.push(run);
+      }
+    });
+
+    userData.runs = groupedRuns;
   };
 
   const retrieveUserData = () => {};
+
+  const allUserRuns = computed(() => {
+    if (userData.runs.length < 1) {
+      return [];
+    }
+    return Object.values(userData.runs).flatMap((g) => g.runs || []);
+  });
 
   return {
     userData,
@@ -139,5 +188,7 @@ export const useUserStore = defineStore("user", () => {
     signOut,
     initAuth,
     retrieveUserData,
+    //computed
+    allUserRuns,
   };
 });
