@@ -13,19 +13,22 @@ export const useExerciseStore = defineStore("exercise", () => {
   });
 
   const getExerciseGroups = async () => {
-    const { data: groupData } = await supabase.from("exercise_groups").select();
+    const { data: groupData } = await supabase
+      .from("exercise_groups")
+      .select("*");
+
     if (groupData) {
-      const prependedData = [
-        {
-          name: "All",
-          id: 0,
-        },
-        ...groupData,
-      ];
-      exerciseGroupData.list = prependedData;
+      // Add the "All" option
+      const allOption = { id: 0, name: "All" };
+
+      // Combine and sort
+      const sorted = [allOption, ...groupData].sort((a, b) => a.id - b.id);
+
+      exerciseGroupData.list = sorted;
       exerciseGroupData.loading = false;
     }
   };
+
   return {
     exerciseGroupData,
     //functions

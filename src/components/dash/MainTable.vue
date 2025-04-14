@@ -12,10 +12,10 @@ const props = defineProps({
 });
 
 const headers = [
-  { title: "Date", value: "created_at" },
-  { title: "Exercise Group", value: "group_name" },
-  { title: "Avg Efficiency On Run", value: "efficiency_score" },
-  { title: "Total Score", value: "total_score" },
+  { title: "Date", value: "created_at_unix", sortable: true },
+  { title: "Exercise Group", value: "group_name", sortable: true },
+  // { title: "Avg Efficiency On Run", value: "efficiency_score" },
+  { title: "Total Score", value: "total_score", sortable: true },
 ];
 
 const expandedTableRows = ref([]);
@@ -33,9 +33,16 @@ const expandedTableRows = ref([]);
       item-value="id"
       class="elevation-1"
       :expanded="expandedTableRows"
+      hide-default-footer
     >
+      <template #item.created_at_unix="{ item }">
+        {{ item.created_at }}
+      </template>
       <template #item.avg_time_per_string="{ value }">
         {{ value + " seconds" }}
+      </template>
+      <template #item.total_score="{ item }">
+        {{ item.total_score + " / " + item.max_possible_score }}
       </template>
       <template #expanded-row="{ item }">
         <tr>
@@ -51,7 +58,8 @@ const expandedTableRows = ref([]);
                     { title: 'Exercise', value: 'name' },
                     { title: 'Score', value: 'score' },
                     { title: 'Time Taken', value: 'time_taken' },
-                    { title: 'Efficiency', value: 'efficiency' },
+                    { title: 'Shot Hit Factor', value: 'hit_factor' },
+                    { title: 'Baseline Hit Factor', value: 'baseline_hf' },
                   ]"
                   class="elevation-1"
                   hide-default-footer

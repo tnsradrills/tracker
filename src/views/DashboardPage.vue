@@ -4,109 +4,128 @@ import { useUserStore } from "@/stores/userData";
 import { useExerciseStore } from "@/stores/exercise.js";
 import MainTable from "@/components/dash/MainTable.vue";
 import SparkLine from "@/components/dash/SparkLine.vue";
+
 const userStore = useUserStore();
 const exerciseStore = useExerciseStore();
-
 const viewingGroup = ref(0);
 
-const averageTime = computed(() => {
+// Centralized filtered runs
+const filteredRuns = computed(() => {
   const runs = userStore.userData.runs ?? [];
-  const filteredRuns =
-    viewingGroup.value === 0
-      ? runs
-      : runs.filter((run) => run.exercise_group_id === viewingGroup.value);
+  return viewingGroup.value === 0
+    ? runs
+    : runs.filter((run) => run.exercise_group_id === viewingGroup.value);
+});
 
-  if (!filteredRuns.length) return 0;
-
-  const totalTime = filteredRuns.reduce((sum, run) => {
-    return sum + run.run_results.reduce((s, r) => s + r.time_taken, 0);
-  }, 0);
-
-  const totalExercises = filteredRuns.reduce(
-    (count, run) => count + run.run_results.length,
-    0
+const averageScorePercentage = computed(() => {
+  const validRuns = filteredRuns.value.filter((run) =>
+    run.run_results.some(
+      (r) =>
+        typeof r.score === "number" &&
+        typeof r.exercises?.max_points === "number"
+    )
   );
 
-  return totalExercises ? (totalTime / totalExercises).toFixed(2) : 0;
+  if (!validRuns.length) return "N/A";
+
+  const totalPercent = validRuns.reduce((sum, run) => {
+    const { total, max } = run.run_results.reduce(
+      (acc, r) => {
+        if (
+          typeof r.score === "number" &&
+          typeof r.exercises?.max_points === "number"
+        ) {
+          acc.total += r.score;
+          acc.max += r.exercises.max_points;
+        }
+        return acc;
+      },
+      { total: 0, max: 0 }
+    );
+    return sum + (max > 0 ? (total / max) * 100 : 0);
+  }, 0);
+
+  return (totalPercent / validRuns.length).toFixed(1);
 });
 
 const averageEfficiency = computed(() => {
-  const runs = userStore.userData.runs ?? [];
-  const filteredRuns =
-    viewingGroup.value === 0
-      ? runs
-      : runs.filter((run) => run.exercise_group_id === viewingGroup.value);
-
-  if (!filteredRuns.length) return 0;
-
-  let totalEfficiency = 0;
+  let total = 0;
   let count = 0;
 
-  filteredRuns.forEach((run) => {
-    run.run_results.forEach((result) => {
-      const max = result.exercises?.max_points;
-      const par = result.exercises?.par_time;
-      const score = result.score;
-      const time = result.time_taken;
-
-      if (max && par && time > 0) {
+  filteredRuns.value.forEach((run) => {
+    run.run_results.forEach(({ score, time_taken, exercises }) => {
+      const max = exercises?.max_points;
+      const par = exercises?.par_time;
+      if (max && par && time_taken > 0) {
         const scoreRatio = score / max;
-        const timeRatio = par / time;
-        const efficiency = scoreRatio * timeRatio * 100;
-        totalEfficiency += efficiency;
+        const timeRatio = par / time_taken;
+        total += scoreRatio * timeRatio * 100;
         count++;
       }
     });
   });
 
-  return count > 0 ? (totalEfficiency / count).toFixed(1) : "N/A";
+  return count ? (total / count).toFixed(1) : "N/A";
 });
 
-const runSummaryRows = computed(() => {
-  const allRuns = userStore.userData.runs ?? [];
-  console.log(allRuns);
-
-  const runsToShow =
-    viewingGroup.value === 0
-      ? allRuns
-      : allRuns.filter((run) => run.exercise_group_id === viewingGroup.value);
-
-  return runsToShow.map((run) => {
-    const totalScore = run.run_results.reduce((sum, r) => sum + r.score, 0);
-    const totalTime = run.run_results.reduce((sum, r) => sum + r.time_taken, 0);
-    const hitFactor = totalScore / totalTime;
-
+const runSummaryRows = computed(() =>
+  filteredRuns.value.map((run) => {
+    let scoreTotal = 0;
+    let timeTotal = 0;
     let efficiencySum = 0;
     let count = 0;
-    run.run_results.forEach((r) => {
-      r.efficiency = null;
-      const max = r.exercises?.max_points;
-      const par = r.exercises?.par_time;
-      const scoreRatio = r.score / max;
-      const timeRatio = par && r.time_taken > 0 ? par / r.time_taken : 1;
-      r.efficiency = (scoreRatio * timeRatio * 100).toFixed(2);
-      efficiencySum += scoreRatio * timeRatio;
-      count++;
-      r.hit_factor = null;
-      if (r.exercises?.par_time) {
-        r.hit_factor = (r.score / r.time_taken).toFixed(2);
+    let maxTotal = 0;
+
+    const results = run.run_results.map((r) => {
+      const max = r.exercises?.max_points || 0;
+      const par = r.exercises?.par_time || null;
+      const score = r.score;
+      const time = r.time_taken;
+
+      maxTotal += max;
+      scoreTotal += score;
+      timeTotal += time;
+
+      let efficiency = null;
+      if (max && par && time > 0) {
+        const scoreRatio = score / max;
+        const timeRatio = par / time;
+        efficiency = (scoreRatio * timeRatio * 100).toFixed(2);
+        efficiencySum += scoreRatio * timeRatio;
+        count++;
       }
+
+      return {
+        ...r,
+        efficiency,
+        hit_factor: par ? (score / time).toFixed(2) : null,
+        baseline_hf: par && max ? (max / par).toFixed(2) : null,
+      };
     });
 
-    const avgEfficiency =
-      count > 0 ? ((efficiencySum / count) * 100).toFixed(1) : "N/A";
+    const hitFactor = scoreTotal / timeTotal;
+    const avgEfficiency = count
+      ? ((efficiencySum / count) * 100).toFixed(1)
+      : "N/A";
+    const scorePercent = maxTotal
+      ? ((scoreTotal / maxTotal) * 100).toFixed(2)
+      : "N/A";
 
     return {
       id: run.id,
       created_at: new Date(run.created_at).toLocaleDateString(),
+      created_at_unix: new Date(run.created_at).getTime(),
       group_name: run.exercise_groups?.name || "Unknown",
-      total_score: totalScore.toFixed(1),
+      total_score: scoreTotal.toFixed(2),
+      total_score_percentage: scorePercent,
+      max_possible_score: maxTotal.toFixed(2),
       total_hit_factor: hitFactor.toFixed(2),
       efficiency_score: avgEfficiency,
-      original: run,
+      original: { ...run, run_results: results },
     };
-  });
-});
+  })
+);
+
 onMounted(() => {
   exerciseStore.getExerciseGroups();
 });
@@ -131,16 +150,18 @@ onMounted(() => {
         <!-- Averages -->
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
-            <div class="text-h6 text-center">Average Score Across All Runs</div>
+            <div class="text-h6 text-center">
+              Average Score % Across Last 10 Runs
+            </div>
             <div class="text-h4 font-weight-bold text-center">
-              {{ averageTime }}
+              {{ averageScorePercentage }}%
             </div>
           </v-card>
         </v-col>
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
             <div class="text-h6 text-center">
-              Average Efficiency Score Across All Runs
+              Average Efficiency Score Across Last 10 Runs
             </div>
             <div class="text-h4 font-weight-bold text-center">
               {{ averageEfficiency }}
@@ -151,12 +172,11 @@ onMounted(() => {
 
       <v-row justify="center">
         <v-col cols="12" md="8">
-          <v-card>
-            <v-card-title>Efficiency Score Trend (Last 10 Runs)</v-card-title>
-            <v-card-text>
-              <SparkLine :data="runSummaryRows" />
-            </v-card-text>
-          </v-card>
+          <SparkLine
+            :data="runSummaryRows"
+            :viewing-group="viewingGroup"
+            :group-names="exerciseStore.exerciseGroupData.list"
+          />
         </v-col>
       </v-row>
 
