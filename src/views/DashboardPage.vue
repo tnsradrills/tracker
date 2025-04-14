@@ -128,6 +128,7 @@ const runSummaryRows = computed(() =>
 
 onMounted(() => {
   exerciseStore.getExerciseGroups();
+  exerciseStore.getAllExercises();
 });
 </script>
 
