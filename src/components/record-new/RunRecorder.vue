@@ -1,160 +1,134 @@
 <script setup>
-import { ref, computed, watch } from "vue";
-import { useExerciseStore } from "@/stores/exercise.js";
-
-const props = defineProps({
-  exerciseGroup: {
-    type: Number,
-    required: true,
-  },
-});
-
-const emit = defineEmits(["completed", "cancelled"]);
-
-const exerciseStore = useExerciseStore();
-
-const exercises = computed(() =>
-  exerciseStore.allExercises.filter((e) => e.group_id === props.exerciseGroup)
-);
-
-const currentIndex = ref(0);
-const recordedResults = ref([]);
-
-const currentExercise = computed(() => exercises.value[currentIndex.value]);
-
+import { ref, reactive, watch } from "vue";
+import { useRunRecorderStore } from "@/stores/runRecorder.js";
+const emit = defineEmits(["complete"]);
+const runRecorder = useRunRecorderStore();
 const score = ref(null);
 const timeTaken = ref(null);
-
-// Load prior answers if they exist
-const loadInputs = () => {
-  const previous = recordedResults.value[currentIndex.value];
-  score.value = previous?.score ?? null;
-  timeTaken.value = previous?.time_taken ?? null;
-};
-
-// On component mount or when exercises load
-watch(currentExercise, () => {
-  loadInputs();
+const scoreForm = ref(null);
+const rules = reactive({
+  score: [(v) => !!v || "Score cannot be empty."],
+  time: [(v) => !!v || "Time cannot be empty."],
 });
+watch(
+  () => runRecorder.currentIndex,
+  () => {
+    const existing = runRecorder.results[runRecorder.currentIndex];
+    score.value = existing?.score ?? null;
+    timeTaken.value = existing?.time_taken ?? null;
+  },
+  { immediate: true }
+);
 
-// Next
-const nextExercise = () => {
-  if (score.value != null && timeTaken.value != null) {
-    recordedResults.value[currentIndex.value] = {
-      exercise_id: currentExercise.value.id,
-      score: parseFloat(score.value),
-      time_taken: parseFloat(timeTaken.value),
-    };
-
-    if (currentIndex.value < exercises.value.length - 1) {
-      currentIndex.value++;
-    } else {
-      emit("completed", recordedResults.value);
-    }
+const handleNext = async () => {
+  const { valid } = await scoreForm.value.validate();
+  if (!valid) return;
+  runRecorder.saveResult(score.value, timeTaken.value);
+  if (runRecorder.currentIndex < runRecorder.exercises.length - 1) {
+    runRecorder.goNext();
+  } else {
+    emit("complete");
   }
 };
 
-// Back
-const previousExercise = () => {
-  if (currentIndex.value > 0) {
-    currentIndex.value--;
-    loadInputs(); // restore saved values
-  }
+const handleBack = () => {
+  runRecorder.goBack();
 };
 
-const cancelRun = () => {
-  recordedResults.value = [];
-  currentIndex.value = 0;
-  score.value = null;
-  timeTaken.value = null;
-  emit("cancelled");
+const cancel = () => {
+  runRecorder.cancelRun();
 };
 </script>
 
 <template>
   <div>
-    <v-alert v-if="exercises.length === 0" type="warning" class="my-4">
-      No exercises found for this group.
-    </v-alert>
-
-    <v-row>
-      <v-col cols="12" class="text-end">
-        <v-btn size="small" @click="cancelRun">Cancel Run</v-btn>
-      </v-col>
-    </v-row>
-
     <v-slide-x-transition mode="out-in">
       <v-card
-        v-if="currentExercise"
-        :key="currentExercise.id"
+        v-if="runRecorder.currentExercise"
+        :key="runRecorder.currentIndex"
         class="mt-4"
         elevation="2"
       >
         <v-card-title class="text-h6 font-weight-bold">
-          {{ currentExercise.name }}
+          {{ runRecorder.currentExercise.name }}
         </v-card-title>
-        <v-card-subtitle class="text-caption text-right">
-          Exercise {{ currentIndex + 1 }} of {{ exercises.length }}
+        <v-card-subtitle class="text-caption">
+          Exercise {{ runRecorder.currentIndex + 1 }} of
+          {{ runRecorder.exercises.length }}
         </v-card-subtitle>
         <v-card-text>
           <div class="text-subtitle-1">
             <strong>Distance:</strong>
-            {{ currentExercise.distance_yards }} yards
+            {{ runRecorder.currentExercise.distance_yards }} yards
           </div>
           <div class="text-subtitle-1">
             <strong>Par Time:</strong>
-            {{ currentExercise.par_time ?? "No Par Time" }} seconds
+            {{ runRecorder.currentExercise.par_time ?? "N/A" }} seconds
           </div>
           <div class="text-subtitle-1">
             <strong>Start Position:</strong>
-            {{ currentExercise.start_position }}
+            {{ runRecorder.currentExercise.start_position }}
           </div>
-          <div v-if="currentExercise.hand_usage" class="text-subtitle-1">
-            <strong>Hand Limitation:</strong>
-            {{ currentExercise.hand_usage }}
+          <div
+            v-if="runRecorder.currentExercise.hand_usage"
+            class="text-subtitle-1"
+          >
+            <strong>Hand Usage:</strong>
+            {{ runRecorder.currentExercise.hand_usage }}
           </div>
-          <div class="mt-2 text-subtitle-1" style="white-space: pre-line">
-            {{ currentExercise.instructions }}
+          <div v-if="runRecorder.currentExercise.options != null">
+            <div
+              v-if="runRecorder.currentExercise.options.modified_scoring"
+              class="text-subtitle-1"
+            >
+              <strong>Modified Scoring Rules:</strong>
+              {{ runRecorder.currentExercise.options.modified_scoring_desc }}
+            </div>
+          </div>
+          <div class="text-subtitle-1 mt-2"><strong>Instructions:</strong></div>
+          <div class="text-subtitle-1" style="white-space: pre-line">
+            {{ runRecorder.currentExercise.instructions }}
           </div>
         </v-card-text>
 
         <v-card-text>
-          <v-row>
-            <v-col cols="12" md="auto">
-              <v-text-field
-                v-model="score"
-                type="number"
-                label="Score"
-                variant="outlined"
-                hide-details
-              />
-            </v-col>
-            <v-col cols="12" md="auto">
-              <v-text-field
-                v-model="timeTaken"
-                type="number"
-                label="Time Taken (seconds)"
-                variant="outlined"
-                hide-details
-              />
-            </v-col>
-          </v-row>
+          <v-form ref="scoreForm"
+            ><v-row>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="score"
+                  label="Score"
+                  type="number"
+                  variant="outlined"
+                  :rules="rules.score"
+                />
+              </v-col>
+              <v-col cols="12" md="6">
+                <v-text-field
+                  v-model="timeTaken"
+                  label="Time (seconds)"
+                  type="number"
+                  variant="outlined"
+                  :rules="rules.time"
+                />
+              </v-col>
+            </v-row>
+          </v-form>
         </v-card-text>
 
         <v-card-actions>
+          <v-btn @click="cancel" variant="text" color="error">Cancel</v-btn>
+          <v-spacer />
           <v-btn
+            @click="handleBack"
             variant="outlined"
-            :disabled="currentIndex === 0"
-            @click="previousExercise"
+            :disabled="runRecorder.currentIndex === 0"
+            class="mr-3"
+            >Back</v-btn
           >
-            Back
-          </v-btn>
-
-          <v-spacer></v-spacer>
-
-          <v-btn variant="tonal" @click="nextExercise" color="primary">
-            {{ currentIndex === exercises.length - 1 ? "Finish" : "Next" }}
-          </v-btn>
+          <v-btn @click="handleNext" color="primary" variant="outlined"
+            >Next</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-slide-x-transition>

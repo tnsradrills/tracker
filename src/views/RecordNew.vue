@@ -1,33 +1,64 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useExerciseStore } from "@/stores/exercise.js";
+import { useRunRecorderStore } from "@/stores/runRecorder.js";
 import RunRecorder from "@/components/record-new/RunRecorder.vue";
+import ScoringRulesDialog from "@/components/record-new/ScoringRulesDialog.vue";
+import RunSummary from "@/components/record-new/RunSummary.vue";
 const exerciseStore = useExerciseStore();
+const runRecorderStore = useRunRecorderStore();
+
 const selectedGroupId = ref(null);
+const showScoringRules = ref(false);
+const recordingRun = computed(() => runRecorderStore.groupId !== null);
 
 const selectedGroup = computed(() => {
+  if (!selectedGroupId.value) {
+    return null;
+  }
   return exerciseStore.exerciseGroupData.list.find(
-    (group) => group.id === selectedGroupId.value
+    (g) => g.id === selectedGroupId.value
   );
 });
 
-const recordingRun = ref(false);
-
-const startNewRun = () => {
-  exerciseStore.newRunRecording.group_id = selectedGroupId.value;
-  exerciseStore.newRunRecording.exercises = [];
-  recordingRun.value = true;
-};
-onMounted(async () => {
-  await exerciseStore.getExerciseGroups();
-  await exerciseStore.getAllExercises();
+onMounted(() => {
+  if (
+    exerciseStore.exerciseGroupData.list.length === 1 ||
+    exerciseStore.allExercises.length < 1
+  ) {
+    exerciseStore.getExerciseGroups();
+    exerciseStore.getAllExercises();
+  }
 });
+
+const startRun = () => {
+  if (selectedGroupId.value) {
+    runRecorderStore.setGroupId(selectedGroupId.value);
+  }
+};
+
+const reviewing = ref(false);
+
+const showSummary = () => {
+  reviewing.value = true;
+};
+
+const handleSubmit = () => {
+  // send to backend
+  runRecorderStore.cancelRun(); // reset state
+  reviewing.value = false;
+  recordingRun.value = false;
+};
+
+const backToEdit = () => {
+  reviewing.value = false;
+};
 </script>
 
 <template>
   <v-container>
-    <v-slide-x-transition mode="out-in">
-      <div v-if="!recordingRun">
+    <v-slide-y-transition mode="out-in">
+      <div v-if="!recordingRun && !reviewing">
         <v-row class="mt-10">
           <v-col cols="12">
             <v-card>
@@ -70,19 +101,34 @@ onMounted(async () => {
         </v-row>
 
         <v-row justify="center" class="pb-5" v-if="selectedGroup">
-          <v-btn @click="startNewRun">Start</v-btn>
+          <v-btn @click="startRun">Start</v-btn>
         </v-row>
       </div>
 
-      <v-row v-if="recordingRun">
-        <v-col cols="12">
-          <RunRecorder
-            :exercise-group="selectedGroupId"
-            @completed="handleRunComplete"
-            @cancelled="recordingRun = false"
-          />
-        </v-col>
-      </v-row>
-    </v-slide-x-transition>
+      <div v-else-if="recordingRun && !reviewing">
+        <RunRecorder @complete="showSummary" />
+        <v-row class="mt-10" justify="center">
+          <v-btn @click="showScoringRules = true"
+            >Show General Scoring Rules</v-btn
+          >
+        </v-row>
+      </div>
+
+      <div v-else>
+        <RunSummary
+          v-if="reviewing"
+          :results="runRecorderStore.results"
+          :exercises="runRecorderStore.exercises"
+          @submit="handleSubmit"
+          @edit="backToEdit"
+        />
+      </div>
+    </v-slide-y-transition>
+
+    <ScoringRulesDialog
+      v-model="showScoringRules"
+      :text="selectedGroup?.scoring_rules"
+      @closeDialog="showScoringRules = false"
+    />
   </v-container>
 </template>
