@@ -1,10 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
 import { useExerciseStore } from "@/stores/exercise.js";
 import { useRunRecorderStore } from "@/stores/runRecorder.js";
 import RunRecorder from "@/components/record-new/RunRecorder.vue";
 import ScoringRulesDialog from "@/components/record-new/ScoringRulesDialog.vue";
 import RunSummary from "@/components/record-new/RunSummary.vue";
+const router = useRouter();
 const exerciseStore = useExerciseStore();
 const runRecorderStore = useRunRecorderStore();
 const selectedGroupId = ref(null);
@@ -45,6 +47,11 @@ const showSummary = () => {
 const submitRunComplete = () => {
   recordingRun.value = false;
   reviewing.value = false;
+  redirectToDash();
+};
+
+const redirectToDash = () => {
+  router.push({ name: "Dashboard" });
 };
 </script>
 
@@ -94,7 +101,7 @@ const submitRunComplete = () => {
         </v-row>
 
         <v-row justify="center" class="pb-5">
-          <v-btn :href="`/dashboard`" class="mr-3">Cancel</v-btn>
+          <v-btn @click="redirectToDash" class="mr-3">Cancel</v-btn>
           <v-btn @click="startRun" color="primary" v-if="selectedGroup"
             >Start</v-btn
           >

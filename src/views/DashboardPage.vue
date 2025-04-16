@@ -147,7 +147,20 @@ onMounted(() => {
           />
         </v-col>
       </v-row>
-      <v-row class="mt-5">
+      <v-row justify="center" v-if="runSummaryRows.length == 0">
+        <v-col cols="12" md="8">
+          <v-card>
+            <v-card-title>Welcome! We're glad you're here.</v-card-title>
+            <v-card-text>
+              When you're ready, you'll find a link to record your first
+              exercise group run in the top right corner. This site will keep
+              track of the last 10 runs you performed for all of the exercise
+              groups above so you can see your progress over time.
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+      <v-row class="mt-5" v-if="runSummaryRows.length > 1">
         <!-- Averages -->
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
@@ -171,13 +184,19 @@ onMounted(() => {
         </v-col>
       </v-row>
 
-      <v-row justify="center" v-if="runSummaryRows.length > 1">
+      <v-row justify="center">
         <v-col cols="12" md="8">
           <SparkLine
             :data="runSummaryRows"
             :viewing-group="viewingGroup"
             :group-names="exerciseStore.exerciseGroupData.list"
+            v-if="runSummaryRows.length > 1"
           />
+          <v-card v-else-if="runSummaryRows.length == 1">
+            <v-card-text class="text-center">
+              Go through one more exercise group to start seeing a trendline!
+            </v-card-text>
+          </v-card>
         </v-col>
       </v-row>
 

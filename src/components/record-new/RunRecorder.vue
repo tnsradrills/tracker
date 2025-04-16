@@ -100,6 +100,7 @@ const cancel = () => {
                   label="Score"
                   type="number"
                   variant="outlined"
+                  step="0.01"
                   :rules="rules.score"
                 />
               </v-col>
@@ -109,6 +110,7 @@ const cancel = () => {
                   label="Time (seconds)"
                   type="number"
                   variant="outlined"
+                  step="0.01"
                   :rules="rules.time"
                 />
               </v-col>
