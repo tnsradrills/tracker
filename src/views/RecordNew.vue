@@ -7,7 +7,6 @@ import ScoringRulesDialog from "@/components/record-new/ScoringRulesDialog.vue";
 import RunSummary from "@/components/record-new/RunSummary.vue";
 const exerciseStore = useExerciseStore();
 const runRecorderStore = useRunRecorderStore();
-
 const selectedGroupId = ref(null);
 const showScoringRules = ref(false);
 const recordingRun = computed(() => runRecorderStore.groupId !== null);
@@ -43,14 +42,8 @@ const showSummary = () => {
   reviewing.value = true;
 };
 
-const handleSubmit = () => {
-  // send to backend
-  runRecorderStore.cancelRun(); // reset state
-  reviewing.value = false;
+const submitRunComplete = () => {
   recordingRun.value = false;
-};
-
-const backToEdit = () => {
   reviewing.value = false;
 };
 </script>
@@ -100,8 +93,11 @@ const backToEdit = () => {
           </v-col>
         </v-row>
 
-        <v-row justify="center" class="pb-5" v-if="selectedGroup">
-          <v-btn @click="startRun">Start</v-btn>
+        <v-row justify="center" class="pb-5">
+          <v-btn :href="`/dashboard`" class="mr-3">Cancel</v-btn>
+          <v-btn @click="startRun" color="primary" v-if="selectedGroup"
+            >Start</v-btn
+          >
         </v-row>
       </div>
 
@@ -119,8 +115,8 @@ const backToEdit = () => {
           v-if="reviewing"
           :results="runRecorderStore.results"
           :exercises="runRecorderStore.exercises"
-          @submit="handleSubmit"
-          @edit="backToEdit"
+          @submitted="submitRunComplete"
+          @edit="reviewing.value = false"
         />
       </div>
     </v-slide-y-transition>

@@ -171,7 +171,7 @@ onMounted(() => {
         </v-col>
       </v-row>
 
-      <v-row justify="center">
+      <v-row justify="center" v-if="runSummaryRows.length > 1">
         <v-col cols="12" md="8">
           <SparkLine
             :data="runSummaryRows"

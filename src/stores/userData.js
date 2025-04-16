@@ -115,19 +115,7 @@ export const useUserStore = defineStore("user", () => {
     }
   };
 
-  const fetchProfile = async () => {
-    const { data: profile, error } = await supabase
-      .from("users")
-      .select("display_name, region, alt_id")
-      .eq("id", userData.id)
-      .single();
-
-    if (!error && profile) {
-      userData.display_name = profile.display_name;
-      userData.region_id = profile.region;
-      userData.alt = profile.alt_id;
-    }
-
+  const fetchRuns = async () => {
     const { data: runsData, error: runsError } = await supabase
       .from("user_runs")
       .select(
@@ -141,7 +129,6 @@ export const useUserStore = defineStore("user", () => {
           id,
           score,
           time_taken,
-          hit_zone,
           exercise_id,
           exercises (
             name,
@@ -162,6 +149,21 @@ export const useUserStore = defineStore("user", () => {
     userData.runs = runsData;
   };
 
+  const fetchProfile = async () => {
+    const { data: profile, error } = await supabase
+      .from("users")
+      .select("display_name, region, alt_id")
+      .eq("id", userData.id)
+      .single();
+
+    if (!error && profile) {
+      userData.display_name = profile.display_name;
+      userData.region_id = profile.region;
+      userData.alt = profile.alt_id;
+    }
+    fetchRuns();
+  };
+
   const retrieveUserData = () => {};
 
   const allUserRuns = computed(() => userData.runs ?? []);
@@ -174,5 +176,7 @@ export const useUserStore = defineStore("user", () => {
     initAuth,
     retrieveUserData,
     allUserRuns,
+    fetchProfile,
+    fetchRuns,
   };
 });

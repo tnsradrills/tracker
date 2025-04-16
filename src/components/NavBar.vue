@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter, useRoute } from "vue-router";
 import { useUserStore } from "@/stores/userData.js";
+import Logo from "@/assets/images/chapter_logo.png";
 const router = useRouter();
 const route = useRoute();
 const userStore = useUserStore();
@@ -29,7 +30,19 @@ const logout = async () => {
 
 <template>
   <v-app-bar app class="app-bar-gradient">
-    <v-app-bar-title class="text-white">Progress Tracker</v-app-bar-title>
+    <v-app-bar-title class="text-white">
+      <v-img
+        style="display: inline-block; margin-top: 3px"
+        :src="Logo"
+        width="3.5rem"
+      ></v-img>
+      <div
+        class="ml-4"
+        style="display: inline-block; margin-top: 22px; position: absolute"
+      >
+        Progress Tracker
+      </div>
+    </v-app-bar-title>
     <v-spacer></v-spacer>
     <v-menu offset-y>
       <template #activator="{ props }">

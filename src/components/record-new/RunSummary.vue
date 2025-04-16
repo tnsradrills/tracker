@@ -1,6 +1,8 @@
 <script setup>
 import { ref, computed } from "vue";
 import { useSnackbarStore } from "@/stores/snackbar.js";
+import { useRunRecorderStore } from "@/stores/runRecorder";
+const runRecorderStore = useRunRecorderStore();
 const snackbarStore = useSnackbarStore();
 const props = defineProps({
   results: {
@@ -38,7 +40,7 @@ const hasInvalidScores = computed(() =>
   editedResults.value.some((r) => isScoreInvalid(r))
 );
 
-const confirm = () => {
+const confirm = async () => {
   if (hasInvalidScores.value == true) {
     snackbarStore.addSnackbar(
       "One or more of the entered scores exceeds the maximum possible points for that exercise. Please update the score(s) accordingly.",
@@ -47,7 +49,15 @@ const confirm = () => {
     );
     return;
   }
-  emit("submit", editedResults.value);
+  try {
+    // Overwrite results in the store
+    runRecorderStore.results = [...editedResults.value];
+    await runRecorderStore.submitRun();
+    emit("submitted");
+  } catch (error) {
+    console.error("Error submitting run:", error.message);
+    alert("There was an error submitting your run. Please try again.");
+  }
 };
 
 const edit = () => {

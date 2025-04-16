@@ -15,26 +15,20 @@ const props = defineProps({
   },
 });
 const trendData = computed(() => {
-  if (props.viewingGroup == 0) {
-    return props.data
-      .map((r) => parseFloat(r.total_score_percentage))
-      .filter((v) => !isNaN(v))
-      .slice(0, 10)
-      .reverse();
-  }
-  return props.data
-    .map((r) => parseFloat(r.total_score))
-    .filter((v) => !isNaN(v))
-    .slice(0, 10)
-    .reverse();
+  const raw =
+    props.viewingGroup == 0
+      ? props.data.map((r) => parseFloat(r.total_score_percentage))
+      : props.data.map((r) => parseFloat(r.total_score));
+
+  const filtered = raw.filter((v) => typeof v === "number" && !isNaN(v));
+  return filtered.slice(0, 10).reverse();
 });
 const gradients = ["#1feaea", "#ffd200", "#f72047"];
 
 const sparklineLabels = computed(() => {
-  if (props.viewingGroup === 0) {
-    return trendData.value.map((v) => `${v}%`);
-  }
-  return trendData.value.map((v) => `${v}`); // No % for raw scores
+  return trendData.value.map((v) =>
+    props.viewingGroup === 0 ? `${v}%` : `${v}`
+  );
 });
 
 const title = computed(() => {
@@ -63,7 +57,6 @@ const title = computed(() => {
         padding="12"
         smooth="10"
         stroke-linecap="round"
-        type="trend"
         auto-draw
         :labels="sparklineLabels"
       >

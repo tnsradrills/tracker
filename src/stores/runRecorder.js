@@ -2,6 +2,8 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useExerciseStore } from "./exercise";
+import { supabase } from "./supabase";
+import { useUserStore } from "./userData";
 
 export const useRunRecorderStore = defineStore("runRecorder", () => {
   const exerciseStore = useExerciseStore();
@@ -48,6 +50,59 @@ export const useRunRecorderStore = defineStore("runRecorder", () => {
     results.value = [];
   };
 
+  const submitRun = async () => {
+    const userStore = useUserStore();
+
+    if (
+      !userStore.userData.alt ||
+      !groupId.value ||
+      results.value.length === 0
+    ) {
+      throw new Error("Missing required data to submit run.");
+    }
+
+    const { data: runInsert, error: runError } = await supabase
+      .from("user_runs")
+      .insert([
+        {
+          alt_user_id: userStore.userData.alt,
+          exercise_group_id: groupId.value,
+          created_at: new Date().toISOString(),
+        },
+      ])
+      .select("id")
+      .single();
+
+    if (runError || !runInsert) {
+      throw new Error("Failed to create run record.");
+    }
+
+    const runId = runInsert.id;
+
+    const formattedResults = results.value.map((r) => ({
+      run_id: runId,
+      exercise_id: r.exercise_id,
+      score: r.score,
+      time_taken: r.time_taken,
+    }));
+
+    const { error: resultError } = await supabase
+      .from("run_results")
+      .insert(formattedResults);
+
+    if (resultError) {
+      throw new Error("Failed to insert run results.");
+    }
+
+    groupId.value = null;
+    currentIndex.value = 0;
+    results.value = [];
+
+    userStore.fetchRuns();
+
+    return true;
+  };
+
   return {
     groupId,
     currentIndex,
@@ -59,5 +114,6 @@ export const useRunRecorderStore = defineStore("runRecorder", () => {
     goNext,
     goBack,
     cancelRun,
+    submitRun,
   };
 });
