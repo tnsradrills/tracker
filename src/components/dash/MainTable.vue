@@ -85,6 +85,17 @@ const expandedTableRows = ref([]);
                     }}
                     seconds
                   </template>
+                  <template #item.hit_factor="{ item }">
+                    <span
+                      class="font-weight-bold"
+                      :class="
+                        item.hit_factor >= item.baseline_hf
+                          ? 'text-green'
+                          : 'text-red'
+                      "
+                      >{{ item.hit_factor }}</span
+                    >
+                  </template>
                 </v-data-table>
               </v-card-text>
             </v-card>

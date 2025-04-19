@@ -45,7 +45,7 @@ export const useExerciseStore = defineStore("exercise", () => {
       .from("exercises")
       .select("*")
       .order("group_id")
-      .order("order");
+      .order("ordering");
     if (data) {
       allExercises.value = data;
     }

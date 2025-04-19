@@ -1,4 +1,3 @@
-// stores/runRecorder.js
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { useExerciseStore } from "./exercise";
@@ -61,37 +60,14 @@ export const useRunRecorderStore = defineStore("runRecorder", () => {
       throw new Error("Missing required data to submit run.");
     }
 
-    const { data: runInsert, error: runError } = await supabase
-      .from("user_runs")
-      .insert([
-        {
-          alt_user_id: userStore.userData.alt,
-          exercise_group_id: groupId.value,
-          created_at: new Date().toISOString(),
-        },
-      ])
-      .select("id")
-      .single();
+    const { error } = await supabase.rpc("submit_run_transaction", {
+      p_alt_user_id: userStore.userData.alt,
+      p_group_id: groupId.value,
+      p_results: results.value,
+    });
 
-    if (runError || !runInsert) {
-      throw new Error("Failed to create run record.");
-    }
-
-    const runId = runInsert.id;
-
-    const formattedResults = results.value.map((r) => ({
-      run_id: runId,
-      exercise_id: r.exercise_id,
-      score: r.score,
-      time_taken: r.time_taken,
-    }));
-
-    const { error: resultError } = await supabase
-      .from("run_results")
-      .insert(formattedResults);
-
-    if (resultError) {
-      throw new Error("Failed to insert run results.");
+    if (error) {
+      throw new Error("Failed to submit run transactionally.");
     }
 
     groupId.value = null;

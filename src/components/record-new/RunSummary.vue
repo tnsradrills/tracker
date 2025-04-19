@@ -15,7 +15,7 @@ const props = defineProps({
   },
 });
 
-const emit = defineEmits(["submit", "edit"]);
+const emit = defineEmits(["submit", "edit", "cancel"]);
 
 const editedResults = ref([...props.results]);
 
@@ -29,6 +29,13 @@ const getExerciseName = (id) => {
 
 const getMaxScore = (id) => {
   return props.exercises.find((e) => e.id === id)?.max_points || "Unknown";
+};
+
+const hasParTime = (id) => {
+  if (props.exercises.find((e) => e.id === id)?.par_time > 0) {
+    return false;
+  }
+  return true;
 };
 
 const isScoreInvalid = (result) => {
@@ -63,13 +70,20 @@ const confirm = async () => {
 const edit = () => {
   emit("edit");
 };
+
+const cancel = () => {
+  emit("cancel");
+  runRecorderStore.cancelRun();
+};
 </script>
 
 <template>
   <v-card class="mt-4" elevation="2">
-    <v-card-title class="text-h6 font-weight-bold"
-      >Review Your Results</v-card-title
-    >
+    <v-card-title class="text-h6 font-weight-bold d-flex"
+      ><div>Review Your Results</div>
+      <v-spacer></v-spacer>
+      <v-btn color="red" variant="outlined" @click="cancel">Cancel Run</v-btn>
+    </v-card-title>
     <v-card-text>
       <v-table>
         <thead>
@@ -101,6 +115,7 @@ const edit = () => {
                 type="number"
                 density="compact"
                 hide-details
+                :disabled="hasParTime(result.exercise_id)"
               />
             </td>
           </tr>
@@ -108,7 +123,7 @@ const edit = () => {
       </v-table>
     </v-card-text>
     <v-card-actions>
-      <v-btn @click="edit" variant="text">Back to exercises</v-btn>
+      <v-btn @click="edit" variant="outlined">Back to exercises</v-btn>
       <v-spacer />
       <v-btn @click="confirm" variant="outlined" color="primary">Submit</v-btn>
     </v-card-actions>

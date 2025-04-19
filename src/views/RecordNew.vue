@@ -123,7 +123,11 @@ const redirectToDash = () => {
           :results="runRecorderStore.results"
           :exercises="runRecorderStore.exercises"
           @submitted="submitRunComplete"
-          @edit="reviewing.value = false"
+          @edit="reviewing = false"
+          @cancel="
+            reviewing = false;
+            recordingRun = false;
+          "
         />
       </div>
     </v-slide-y-transition>

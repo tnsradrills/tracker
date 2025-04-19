@@ -8,6 +8,8 @@ export const useRegionStore = defineStore("region", () => {
   });
 
   const retrieveRegionList = async () => {
+    regionListData.list = [];
+    regionListData.loading = true;
     const { data, error } = await supabase.from("regions").select();
     if (data) {
       regionListData.list = data;

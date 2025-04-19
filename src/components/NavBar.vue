@@ -52,6 +52,19 @@ const logout = async () => {
       </template>
 
       <v-list>
+        <v-list-item>
+          <div>
+            <v-avatar color="grey-darken-1" class="mr-2">
+              <span class="text-h5">{{
+                userStore.userData.display_name
+                  ? userStore.userData.display_name[0].toUpperCase()
+                  : ""
+              }}</span>
+            </v-avatar>
+            <span>Update Account</span>
+          </div>
+        </v-list-item>
+        <v-divider></v-divider>
         <v-list-item
           v-for="(item, i) in navItems"
           :key="i"

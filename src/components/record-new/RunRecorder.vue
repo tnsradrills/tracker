@@ -1,15 +1,18 @@
 <script setup>
-import { ref, reactive, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { useRunRecorderStore } from "@/stores/runRecorder.js";
 const emit = defineEmits(["complete"]);
 const runRecorder = useRunRecorderStore();
 const score = ref(null);
 const timeTaken = ref(null);
 const scoreForm = ref(null);
-const rules = reactive({
-  score: [(v) => !!v || "Score cannot be empty."],
-  time: [(v) => !!v || "Time cannot be empty."],
-});
+const scoreRules = computed(() => [
+  (v) => (v !== null && v !== "") || "Score cannot be empty.",
+  (v) =>
+    parseFloat(v) <= runRecorder.currentExercise?.max_points ||
+    `Score cannot exceed ${runRecorder.currentExercise?.max_points} points.`,
+]);
+const timeRules = [(v) => (v !== null && v !== "") || "Time cannot be empty."];
 watch(
   () => runRecorder.currentIndex,
   () => {
@@ -67,14 +70,17 @@ const cancel = () => {
           </div>
           <div class="text-subtitle-1">
             <strong>Start Position:</strong>
-            {{ runRecorder.currentExercise.start_position }}
+            {{
+              runRecorder.currentExercise?.options?.start_position ??
+              "Not specified"
+            }}
           </div>
           <div
-            v-if="runRecorder.currentExercise.hand_usage"
+            v-if="runRecorder.currentExercise?.options?.hand_usage"
             class="text-subtitle-1"
           >
             <strong>Hand Usage:</strong>
-            {{ runRecorder.currentExercise.hand_usage }}
+            {{ runRecorder.currentExercise?.options?.hand_usage }}
           </div>
           <div v-if="runRecorder.currentExercise.options != null">
             <div
@@ -101,17 +107,21 @@ const cancel = () => {
                   type="number"
                   variant="outlined"
                   step="0.01"
-                  :rules="rules.score"
+                  :rules="scoreRules"
                 />
               </v-col>
-              <v-col cols="12" md="6">
+              <v-col
+                cols="12"
+                md="6"
+                v-if="runRecorder.currentExercise?.par_time"
+              >
                 <v-text-field
                   v-model="timeTaken"
                   label="Time (seconds)"
                   type="number"
                   variant="outlined"
                   step="0.01"
-                  :rules="rules.time"
+                  :rules="timeRules"
                 />
               </v-col>
             </v-row>
@@ -119,7 +129,9 @@ const cancel = () => {
         </v-card-text>
 
         <v-card-actions>
-          <v-btn @click="cancel" variant="text" color="error">Cancel</v-btn>
+          <v-btn @click="cancel" variant="outlined" color="red"
+            >Cancel Run</v-btn
+          >
           <v-spacer />
           <v-btn
             @click="handleBack"

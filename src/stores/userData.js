@@ -124,7 +124,9 @@ export const useUserStore = defineStore("user", () => {
         exercise_group_id,
         created_at,
         notes,
-        exercise_groups ( name ),
+        exercise_groups (
+          name
+        ),
         run_results (
           id,
           score,
@@ -132,12 +134,11 @@ export const useUserStore = defineStore("user", () => {
           exercise_id,
           exercises (
             name,
-            "order",
+            ordering,
             max_points,
             par_time
           )
-        )
-      `
+        )`
       )
       .eq("alt_user_id", userData.alt)
       .order("created_at", { ascending: false });

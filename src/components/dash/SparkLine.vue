@@ -54,10 +54,10 @@ const title = computed(() => {
         gradient-direction="top"
         line-width="2"
         :model-value="trendData"
-        padding="12"
+        padding="14"
         smooth="10"
         stroke-linecap="round"
-        auto-draw
+        :auto-draw="true"
         :labels="sparklineLabels"
       >
       </v-sparkline>
