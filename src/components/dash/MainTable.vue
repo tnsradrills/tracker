@@ -14,11 +14,20 @@ const props = defineProps({
 const headers = [
   { title: "Date", value: "created_at_unix", sortable: true },
   { title: "Exercise Group", value: "group_name", sortable: true },
-  // { title: "Avg Efficiency On Run", value: "efficiency_score" },
   { title: "Total Score", value: "total_score", sortable: true },
 ];
 
 const expandedTableRows = ref([]);
+
+const timeDisplay = (item) => {
+  if (item.exercises.par_time && item.time_taken) {
+    return item.time_taken + " / " + item.exercises.par_time + " seconds";
+  } else if (item.time_taken) {
+    return item.time_taken + " seconds";
+  } else {
+    return "N/A";
+  }
+};
 </script>
 
 <template>
@@ -76,14 +85,7 @@ const expandedTableRows = ref([]);
                     }}
                   </template>
                   <template #item.time_taken="{ item }">
-                    {{
-                      item.exercises?.par_time
-                        ? item.time_taken.toFixed(2) +
-                          " / " +
-                          item.exercises?.par_time
-                        : item.time_taken.toFixed(2)
-                    }}
-                    seconds
+                    {{ timeDisplay(item) }}
                   </template>
                   <template #item.hit_factor="{ item }">
                     <span

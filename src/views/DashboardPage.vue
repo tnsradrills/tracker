@@ -9,7 +9,6 @@ const userStore = useUserStore();
 const exerciseStore = useExerciseStore();
 const viewingGroup = ref(0);
 
-// Centralized filtered runs
 const filteredRuns = computed(() => {
   const runs = userStore.userData.runs ?? [];
   return viewingGroup.value === 0
@@ -48,32 +47,40 @@ const averageScorePercentage = computed(() => {
   return (totalPercent / validRuns.length).toFixed(1);
 });
 
-const averageEfficiency = computed(() => {
-  let total = 0;
-  let count = 0;
+const consistencyScore = computed(() => {
+  const percentages = filteredRuns.value
+    .map((run) => {
+      const { total, max } = run.run_results.reduce(
+        (acc, r) => {
+          if (
+            typeof r.score === "number" &&
+            typeof r.exercises?.max_points === "number"
+          ) {
+            acc.total += r.score;
+            acc.max += r.exercises.max_points;
+          }
+          return acc;
+        },
+        { total: 0, max: 0 }
+      );
+      return max > 0 ? (total / max) * 100 : null;
+    })
+    .filter((v) => v !== null);
 
-  filteredRuns.value.forEach((run) => {
-    run.run_results.forEach(({ score, time_taken, exercises }) => {
-      const max = exercises?.max_points;
-      const par = exercises?.par_time;
-      if (max && par && time_taken > 0) {
-        const scoreRatio = score / max;
-        const timeRatio = par / time_taken;
-        total += scoreRatio * timeRatio * 100;
-        count++;
-      }
-    });
-  });
+  if (percentages.length < 2) return "N/A";
 
-  return count ? (total / count).toFixed(1) : "N/A";
+  const avg = percentages.reduce((a, b) => a + b, 0) / percentages.length;
+  const variance =
+    percentages.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) /
+    percentages.length;
+  const stddev = Math.sqrt(variance);
+  return (100 - stddev).toFixed(1);
 });
 
 const runSummaryRows = computed(() =>
   filteredRuns.value.map((run) => {
     let scoreTotal = 0;
     let timeTotal = 0;
-    let efficiencySum = 0;
-    let count = 0;
     let maxTotal = 0;
 
     const results = run.run_results.map((r) => {
@@ -86,27 +93,14 @@ const runSummaryRows = computed(() =>
       scoreTotal += score;
       timeTotal += time;
 
-      let efficiency = null;
-      if (max && par && time > 0) {
-        const scoreRatio = score / max;
-        const timeRatio = par / time;
-        efficiency = (scoreRatio * timeRatio * 100).toFixed(2);
-        efficiencySum += scoreRatio * timeRatio;
-        count++;
-      }
-
       return {
         ...r,
-        efficiency,
         hit_factor: par ? (score / time).toFixed(2) : null,
         baseline_hf: par && max ? (max / par).toFixed(2) : null,
       };
     });
 
     const hitFactor = scoreTotal / timeTotal;
-    const avgEfficiency = count
-      ? ((efficiencySum / count) * 100).toFixed(1)
-      : "N/A";
     const scorePercent = maxTotal
       ? ((scoreTotal / maxTotal) * 100).toFixed(2)
       : "N/A";
@@ -120,7 +114,6 @@ const runSummaryRows = computed(() =>
       total_score_percentage: scorePercent,
       max_possible_score: maxTotal.toFixed(2),
       total_hit_factor: hitFactor.toFixed(2),
-      efficiency_score: avgEfficiency,
       original: { ...run, run_results: results },
     };
   })
@@ -174,11 +167,9 @@ onMounted(() => {
         </v-col>
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
-            <div class="text-h6 text-center">
-              Average Efficiency Score Across Last 10 Runs
-            </div>
+            <div class="text-h6 text-center">Consistency Score</div>
             <div class="text-h4 font-weight-bold text-center">
-              {{ averageEfficiency }}
+              {{ consistencyScore }}
             </div>
           </v-card>
         </v-col>

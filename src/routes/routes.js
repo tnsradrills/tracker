@@ -26,6 +26,12 @@ const routes = [
     component: () => import("@/views/RecordNew.vue"),
     meta: { requiresAuth: true },
   },
+  {
+    path: "/edit-account",
+    name: "Edit Account",
+    component: () => import("@/views/EditAccount.vue"),
+    meta: { requiresAuth: true },
+  },
 ];
 
 const router = createRouter({

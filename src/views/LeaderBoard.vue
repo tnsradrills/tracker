@@ -9,18 +9,18 @@ const exerciseStore = useExerciseStore();
 
 const selectedGroup = ref(1);
 const selectedRegion = ref(null);
-const selectedMetric = ref("weighted_match_percentage");
+const selectedMetric = ref("match_percentage");
 
 const leaderboardRaw = ref([]);
 
 const metricOptions = ref([
   {
-    text: "Weighted Match Percentage",
-    value: "weighted_match_percentage",
+    text: "Latest Match Percentage",
+    value: "match_percentage",
   },
   {
-    text: "Match Percentage",
-    value: "match_percentage",
+    text: "Weighted Match Percentage",
+    value: "weighted_match_percentage",
   },
   {
     text: "Average Score",
@@ -36,7 +36,7 @@ const headers = [
   { title: "Rank", value: "position" },
   { title: "User", value: "display_name" },
   { title: "Region", value: "region" },
-  { title: "Match Percentage", value: "match_percentage" },
+  { title: "Latest Match Percentage", value: "match_percentage" },
   { title: "Weighted Match Percentage", value: "weighted_match_percentage" },
   { title: "Avg Score", value: "average_score" },
   { title: "Summed Total Score", value: "total_score" },
@@ -57,7 +57,7 @@ const filteredLeaderboard = computed(() => {
   let filtered = leaderboardRaw.value;
 
   if (selectedRegion.value !== null) {
-    filtered = filtered.filter((r) => r.region_id === selectedRegion.value);
+    filtered = filtered.filter((r) => r.region === selectedRegion.value);
   }
 
   const sorted = [...filtered].sort(
@@ -70,6 +70,14 @@ const filteredLeaderboard = computed(() => {
   }));
 });
 
+const leaderboardUnder5 = computed(() =>
+  filteredLeaderboard.value.filter((entry) => entry.run_count < 5)
+);
+
+const leaderboard5Plus = computed(() =>
+  filteredLeaderboard.value.filter((entry) => entry.run_count >= 5)
+);
+
 const prependedRegionList = computed(() => {
   return [
     { id: null, name: "All regions" },
@@ -81,7 +89,7 @@ const filteredExerciseGroupList = computed(() => {
   return exerciseStore.exerciseGroupData.list.slice(1);
 });
 
-watch([selectedGroup, selectedRegion, selectedMetric], loadLeaderboard, {
+watch([selectedGroup], loadLeaderboard, {
   immediate: true,
 });
 
@@ -105,7 +113,7 @@ onMounted(() => {
 <template>
   <v-container>
     <v-card class="pa-4" elevation="2">
-      <v-card-title class="text-h5 font-weight-bold">Leaderboard</v-card-title>
+      <v-card-title class="text-h5 font-weight-bold">Leaderboards</v-card-title>
 
       <v-row class="mt-3">
         <v-col cols="12" md="4">
@@ -148,15 +156,86 @@ onMounted(() => {
     </v-card>
 
     <v-card class="mt-5" elevation="2">
+      <v-card-title class="text-h6 font-weight-bold">
+        5 - 10 Attempts
+      </v-card-title>
       <v-data-table
         :headers="headers"
-        :items="filteredLeaderboard"
+        :items="leaderboard5Plus"
         class="elevation-1"
         item-value="alt_user_id"
         dense
+        :loading="leaderboardStore.loading"
+        items-per-page-text="Rows per page"
+        :hide-default-footer="leaderboard5Plus.length <= 10"
       >
+        <template #header.weighted_match_percentage>
+          <v-tooltip location="top">
+            <template #activator="{ props }">
+              <span v-bind="props"> Weighted Match % </span>
+            </template>
+            <span>
+              Calculated by comparing your <strong>4 best runs</strong> to the
+              top shooter's 4 best runs, scaled by how many attempts you've
+              made. Encourages practice without punishing activity.
+            </span>
+          </v-tooltip>
+        </template>
+        <template #loading>
+          <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
+        </template>
         <template #item.position="{ item }">
           <span class="font-weight-bold">#{{ item.position }}</span>
+        </template>
+        <template #item.match_percentage="{ item }">
+          {{ item.match_percentage }}%
+        </template>
+        <template #item.weighted_match_percentage="{ item }">
+          {{ item.weighted_match_percentage }}%
+        </template>
+        <template #item.total_score="{ item }">
+          {{ item.total_score + " / " + item.total_possible }}
+        </template>
+        <template #item.region="{ item }">
+          {{ findRegion(item.region) }}
+        </template>
+      </v-data-table>
+    </v-card>
+
+    <v-card class="mt-5" elevation="2">
+      <v-card-title class="text-h6 font-weight-bold">
+        1 - 4 Attempts
+      </v-card-title>
+      <v-data-table
+        :headers="headers"
+        :items="leaderboardUnder5"
+        class="elevation-1"
+        item-value="alt_user_id"
+        dense
+        :loading="leaderboardStore.loading"
+        items-per-page-text="Rows per page"
+        :hide-default-footer="leaderboardUnder5.length <= 10"
+      >
+        <template #loading>
+          <v-skeleton-loader type="table-row@10"></v-skeleton-loader>
+        </template>
+        <template #header.weighted_match_percentage>
+          <v-tooltip location="top">
+            <template #activator="{ props }">
+              <span v-bind="props"> Weighted Match % </span>
+            </template>
+            <span>
+              Calculated by comparing your <strong>4 best runs</strong> to the
+              top shooter's 4 best runs, scaled by how many attempts you've
+              made. Encourages practice without punishing activity.
+            </span>
+          </v-tooltip>
+        </template>
+        <template #item.position="{ item }">
+          <span class="font-weight-bold">#{{ item.position }}</span>
+        </template>
+        <template #item.weighted_match_percentage="{ item }">
+          {{ item.weighted_match_percentage }}%
         </template>
         <template #item.match_percentage="{ item }">
           {{ item.match_percentage }}%

@@ -53,6 +53,12 @@ const submitRunComplete = () => {
 const redirectToDash = () => {
   router.push({ name: "Dashboard" });
 };
+
+const cancelFromSummary = () => {
+  recordingRun.value = false;
+  reviewing.value = false;
+  runRecorderStore.cancelRun();
+};
 </script>
 
 <template>
@@ -124,10 +130,7 @@ const redirectToDash = () => {
           :exercises="runRecorderStore.exercises"
           @submitted="submitRunComplete"
           @edit="reviewing = false"
-          @cancel="
-            reviewing = false;
-            recordingRun = false;
-          "
+          @cancel="cancelFromSummary"
         />
       </div>
     </v-slide-y-transition>

@@ -52,7 +52,7 @@ const logout = async () => {
       </template>
 
       <v-list>
-        <v-list-item>
+        <v-list-item @click="router.push({ name: 'Edit Account' })">
           <div>
             <v-avatar color="grey-darken-1" class="mr-2">
               <span class="text-h5">{{

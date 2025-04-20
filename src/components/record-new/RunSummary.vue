@@ -73,7 +73,6 @@ const edit = () => {
 
 const cancel = () => {
   emit("cancel");
-  runRecorderStore.cancelRun();
 };
 </script>
 

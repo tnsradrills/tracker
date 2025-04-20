@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, defineEmits } from "vue";
+import { ref, reactive, computed, defineEmits } from "vue";
 import { useUserStore } from "../stores/userData.js";
 import { useRegionStore } from "../stores/regionData.js";
 import { useSnackbarStore } from "../stores/snackbar.js";
@@ -15,6 +15,16 @@ const password = ref(null);
 const signupForm = ref(null);
 
 const emit = defineEmits(["backToMain"]);
+const hasCapitalLetter = computed(() => /[A-Z]/.test(password.value));
+const hasNumber = computed(() => /\d/.test(password.value));
+const atLeastEightChar = computed(() => {
+  if (password.value) {
+    if (password.value.length >= 8) {
+      return true;
+    }
+  }
+  return false;
+});
 const rules = reactive({
   username: [
     (v) => !!v || "Your discord name or some manner of username is required.",
@@ -25,13 +35,19 @@ const rules = reactive({
       "A display name is required (so we can celebrate progress with you!)",
   ],
   region: [(v) => !!v || "Your region is required."],
-  pass: [(v) => !!v || "A password is required."],
+  pass: [
+    (v) => !!v || "A password is required.",
+    () => hasCapitalLetter.value || "A bit stronger...",
+    () => hasNumber.value || "A bit stronger...",
+    () => atLeastEightChar.value || "A bit stronger...",
+  ],
 });
 
 const revealPass = ref(false);
 
 const trySignup = async () => {
-  if (!signupForm.value.validate()) {
+  const { valid } = await signupForm.value.validate();
+  if (!valid) {
     return;
   }
   const result = await userStore.signupUser(
@@ -94,13 +110,28 @@ const trySignup = async () => {
                 prepend-inner-icon="mdi-lock"
                 :rules="rules.pass"
                 persistent-hint
-                hint="No fancy authentication on this site, so make it strong-ish."
+                :hint="
+                  hasCapitalLetter && hasNumber && atLeastEightChar
+                    ? 'That got it!'
+                    : 'No fancy authentication on this site, so make it strong-ish.'
+                "
                 :append-inner-icon="
                   revealPass ? 'mdi mdi-eye-closed' : 'mdi mdi-eye-outline'
                 "
                 @click:append-inner="revealPass = !revealPass"
               >
               </v-text-field>
+              <div class="text-caption mt-1 pl-4">
+                <div :class="hasCapitalLetter ? 'text-success' : 'text-error'">
+                  At least one capital letter
+                </div>
+                <div :class="hasNumber ? 'text-success' : 'text-error'">
+                  At least one number
+                </div>
+                <div :class="atLeastEightChar ? 'text-success' : 'text-error'">
+                  At least 8 characters long
+                </div>
+              </div>
             </v-col>
           </v-row>
 

@@ -1,18 +1,25 @@
 import { defineStore } from "pinia";
 import { reactive, computed } from "vue";
 import { supabase } from "./supabase.js";
-
+import CryptoJS from "crypto-js";
 export const useUserStore = defineStore("user", () => {
   const userData = reactive({
     id: null,
     alt: null,
+    username: null,
     display_name: null,
     region_id: null,
     runs: [],
   });
 
+  const hashValue = (value) => {
+    const hash = CryptoJS.SHA256(value).toString(CryptoJS.enc.Hex);
+    return `${hash.slice(0, 20)}`;
+  };
+
   const loginUser = async (discordName, password) => {
-    const fakeEmail = `${discordName}@placeholder.xyz`;
+    const hashed = hashValue(discordName);
+    const fakeEmail = `${hashed}@placeholder.xyz`;
 
     const { data: authData, error: signInError } =
       await supabase.auth.signInWithPassword({
@@ -35,13 +42,15 @@ export const useUserStore = defineStore("user", () => {
     }
 
     userData.id = authData.user.id;
+    userData.username = hashed;
     await fetchProfile();
 
     return { success: true };
   };
 
   const signupUser = async (discordName, displayName, password, regionId) => {
-    const fakeEmail = `${discordName}@placeholder.xyz`;
+    const hashed = hashValue(discordName);
+    const fakeEmail = `${hashed}@placeholder.xyz`;
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp(
       {
@@ -91,6 +100,7 @@ export const useUserStore = defineStore("user", () => {
     userData.id = userId;
     userData.display_name = displayName;
     userData.region_id = regionId;
+    userData.username = hashed;
     userData.runs = [];
 
     return { success: true };
@@ -112,6 +122,10 @@ export const useUserStore = defineStore("user", () => {
     if (session && session.user) {
       userData.id = session.user.id;
       await fetchProfile();
+    }
+    const email = session.user.email;
+    if (email && email.endsWith("@placeholder.xyz")) {
+      userData.username = email.replace("@placeholder.xyz", "");
     }
   };
 
@@ -169,6 +183,44 @@ export const useUserStore = defineStore("user", () => {
 
   const allUserRuns = computed(() => userData.runs ?? []);
 
+  const updateDisplayName = async (changedDisplayName) => {
+    if (changedDisplayName !== userData.display_name) {
+      const { error } = await supabase
+        .from("users")
+        .update({ display_name: changedDisplayName })
+        .eq("id", userData.id);
+      if (error) {
+        return { success: false };
+      } else {
+        userData.display_name = changedDisplayName;
+        return { success: true };
+      }
+    }
+  };
+
+  const updatePassword = async (newPassword, currentPassword) => {
+    const session = await supabase.auth.getSession();
+    const email = session.data.session?.user?.email;
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password: currentPassword,
+    });
+    if (authError) {
+      return { success: false, message: "Current password is incorrect." };
+    }
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.value,
+    });
+    if (error) {
+      return { success: false };
+    } else {
+      return {
+        success: true,
+        message: "Failed to update password. Please try again.",
+      };
+    }
+  };
+
   return {
     userData,
     loginUser,
@@ -179,5 +231,7 @@ export const useUserStore = defineStore("user", () => {
     allUserRuns,
     fetchProfile,
     fetchRuns,
+    updateDisplayName,
+    updatePassword,
   };
 });

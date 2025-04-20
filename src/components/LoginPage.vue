@@ -19,7 +19,8 @@ const rules = reactive({
 const revealPass = ref(false);
 
 const tryLogin = async () => {
-  if (!loginForm.value.validate()) {
+  const { valid } = await loginForm.value.validate();
+  if (!valid) {
     return;
   }
   const result = await userStore.loginUser(discordName.value, password.value);

@@ -33,8 +33,6 @@ export const useSnackbarStore = defineStore("snackbar", () => {
         removeSnackbar(id);
       }, timeout);
     }
-
-    console.log(snackbar.buttons);
   };
 
   const clearSnackbars = () => {
