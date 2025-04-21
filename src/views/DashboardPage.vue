@@ -4,7 +4,8 @@ import { useUserStore } from "@/stores/userData";
 import { useExerciseStore } from "@/stores/exercise.js";
 import MainTable from "@/components/dash/MainTable.vue";
 import SparkLine from "@/components/dash/SparkLine.vue";
-
+import { useDisplay } from "vuetify";
+const { smAndUp } = useDisplay();
 const userStore = useUserStore();
 const exerciseStore = useExerciseStore();
 const viewingGroup = ref(0);
@@ -154,7 +155,6 @@ onMounted(() => {
         </v-col>
       </v-row>
       <v-row class="mt-5" v-if="runSummaryRows.length > 1">
-        <!-- Averages -->
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
             <div class="text-h6 text-center">
@@ -167,7 +167,21 @@ onMounted(() => {
         </v-col>
         <v-col cols="12" md="6">
           <v-card elevation="2" class="pa-4">
-            <div class="text-h6 text-center">Consistency Score</div>
+            <div class="text-h6 text-center d-flex justify-center align-center">
+              Consistency Score
+              <v-tooltip location="top" v-if="smAndUp">
+                <template #activator="{ props }">
+                  <v-icon v-bind="props" size="18" color="primary" class="ml-2">
+                    mdi-help-circle-outline
+                  </v-icon>
+                </template>
+                <div style="max-width: 250px; white-space: normal">
+                  Consistency is calculated by averaging your score percentages
+                  and subtracting the standard deviation. A lower variation in
+                  scores results in a higher consistency score.
+                </div>
+              </v-tooltip>
+            </div>
             <div class="text-h4 font-weight-bold text-center">
               {{ consistencyScore }}
             </div>
