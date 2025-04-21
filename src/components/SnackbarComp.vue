@@ -1,6 +1,6 @@
 <script setup>
 import { computed, watch } from "vue";
-import { useSnackbarStore } from "../stores/snackbar.js";
+import { useSnackbarStore } from "@/stores/snackbar.js";
 import { useRoute } from "vue-router";
 const route = useRoute();
 const store = useSnackbarStore();

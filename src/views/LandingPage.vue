@@ -1,9 +1,9 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import ChapterLogo from "@/assets/images/chapter_logo.png";
-import LoginPage from "../components/LoginPage.vue";
-import SignupPage from "../components/SignupPage.vue";
-import { useRegionStore } from "../stores/regionData.js";
+import LoginPage from "@/components/LoginPage.vue";
+import SignupPage from "@/components/SignupPage.vue";
+import { useRegionStore } from "@/stores/regionData.js";
 import { useUserStore } from "@/stores/userData.js";
 const showLogin = ref(false);
 const showSignup = ref(false);

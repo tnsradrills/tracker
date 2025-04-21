@@ -1,7 +1,7 @@
 <script setup>
 import { ref, reactive, defineEmits } from "vue";
-import { useUserStore } from "../stores/userData.js";
-import { useSnackbarStore } from "../stores/snackbar.js";
+import { useUserStore } from "@/stores/userData.js";
+import { useSnackbarStore } from "@/stores/snackbar.js";
 import { useRouter } from "vue-router";
 const router = useRouter();
 const userStore = useUserStore();
