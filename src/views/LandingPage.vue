@@ -4,10 +4,11 @@ import ChapterLogo from "@/assets/images/chapter_logo.png";
 import LoginPage from "../components/LoginPage.vue";
 import SignupPage from "../components/SignupPage.vue";
 import { useRegionStore } from "../stores/regionData.js";
+import { useUserStore } from "@/stores/userData.js";
 const showLogin = ref(false);
 const showSignup = ref(false);
 const regionStore = useRegionStore();
-
+const userStore = useUserStore();
 onMounted(() => {
   regionStore.retrieveRegionList();
 });
@@ -17,7 +18,7 @@ onMounted(() => {
   <div
     class="landing-background fill-height d-flex align-center justify-center"
   >
-    <v-container>
+    <v-container v-if="!userStore.userData.id">
       <v-row justify="center">
         <v-col cols="12" class="text-center">
           <v-img :src="ChapterLogo" contain height="150px" class="mb-4" />

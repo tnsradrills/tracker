@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { reactive, computed } from "vue";
+import { reactive } from "vue";
 import { supabase } from "./supabase.js";
 import CryptoJS from "crypto-js";
 export const useUserStore = defineStore("user", () => {
@@ -108,10 +108,6 @@ export const useUserStore = defineStore("user", () => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    userData.id = null;
-    userData.display_name = null;
-    userData.region_id = null;
-    userData.runs = [];
     return { success: true };
   };
 
@@ -181,19 +177,23 @@ export const useUserStore = defineStore("user", () => {
 
   const retrieveUserData = () => {};
 
-  const allUserRuns = computed(() => userData.runs ?? []);
-
   const updateDisplayName = async (changedDisplayName) => {
     if (changedDisplayName !== userData.display_name) {
-      const { error } = await supabase
-        .from("users")
-        .update({ display_name: changedDisplayName })
-        .eq("id", userData.id);
-      if (error) {
-        return { success: false };
+      const session = await supabase.auth.getSession();
+      const authId = session.data.session?.user?.id;
+      if (authId) {
+        const { error } = await supabase
+          .from("users")
+          .update({ display_name: changedDisplayName })
+          .eq("id", userData.id);
+        if (error) {
+          return { success: false };
+        } else {
+          userData.display_name = changedDisplayName;
+          return { success: true };
+        }
       } else {
-        userData.display_name = changedDisplayName;
-        return { success: true };
+        return { success: false };
       }
     }
   };
@@ -209,14 +209,17 @@ export const useUserStore = defineStore("user", () => {
       return { success: false, message: "Current password is incorrect." };
     }
     const { error } = await supabase.auth.updateUser({
-      password: newPassword.value,
+      password: newPassword,
     });
+
     if (error) {
-      return { success: false };
+      return {
+        success: false,
+        message: "Failed to update password. Please try again.",
+      };
     } else {
       return {
         success: true,
-        message: "Failed to update password. Please try again.",
       };
     }
   };
@@ -228,7 +231,6 @@ export const useUserStore = defineStore("user", () => {
     signOut,
     initAuth,
     retrieveUserData,
-    allUserRuns,
     fetchProfile,
     fetchRuns,
     updateDisplayName,

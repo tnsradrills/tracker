@@ -13,6 +13,7 @@ const displayName = ref(null);
 const region = ref(null);
 const password = ref(null);
 const signupForm = ref(null);
+const loading = ref(false);
 
 const emit = defineEmits(["backToMain"]);
 const hasCapitalLetter = computed(() => /[A-Z]/.test(password.value));
@@ -50,6 +51,7 @@ const trySignup = async () => {
   if (!valid) {
     return;
   }
+  loading.value = true;
   const result = await userStore.signupUser(
     discordName.value,
     displayName.value,
@@ -61,6 +63,7 @@ const trySignup = async () => {
     snackbarStore.addSnackbar(result.message, "red-lighten-1", -1);
   } else {
     router.push({ name: "Dashboard" });
+    loading.value = false;
   }
 };
 </script>
@@ -140,7 +143,13 @@ const trySignup = async () => {
               <v-btn size="large" @click="emit('backToMain')"> Back </v-btn>
             </v-col>
             <v-col cols="auto">
-              <v-btn size="large" color="primary" @click="trySignup">
+              <v-btn
+                size="large"
+                color="primary"
+                @click="trySignup"
+                :disabled="loading"
+                :loading="loading"
+              >
                 Submit
               </v-btn>
             </v-col>

@@ -13,6 +13,7 @@ const currentPassword = ref(null);
 const newPassword = ref(null);
 const confirmPassword = ref(null);
 const passwordUpdating = ref(false);
+const revealPass = ref(false);
 const hasCapitalLetter = computed(() => /[A-Z]/.test(newPassword.value));
 const hasNumber = computed(() => /\d/.test(newPassword.value));
 const atLeastEightChar = computed(() => {
@@ -66,7 +67,7 @@ const updatePassword = async () => {
   }
   passwordUpdating.value = true;
   let success = await userStore.updatePassword(
-    confirmPassword.value,
+    newPassword.value,
     currentPassword.value
   );
   if (success.success) {
@@ -85,13 +86,17 @@ const updatePassword = async () => {
       <v-card-text>
         <v-form ref="newDisplayForm">
           <v-row justify="center">
-            <v-col cols="12" md="8" class="pb-0">
+            <v-col cols="12" md="8" class="pb-2">
               <v-text-field
                 v-model="displayName"
                 label="Display Name"
                 variant="outlined"
                 :disabled="displayNameUpdating"
                 :rules="rules.display_name"
+                persistent-hint
+                :hint="
+                  'Current display name: ' + userStore.userData.display_name
+                "
               />
             </v-col>
             <v-col cols="12" class="pt-0 text-center">
@@ -114,21 +119,29 @@ const updatePassword = async () => {
             <v-col cols="12" md="8" class="py-0">
               <v-text-field
                 v-model="currentPassword"
-                type="password"
                 label="Current Password"
                 variant="outlined"
                 :disabled="passwordUpdating"
+                :append-inner-icon="
+                  revealPass ? 'mdi mdi-eye-closed' : 'mdi mdi-eye-outline'
+                "
+                :type="revealPass ? 'text' : 'password'"
+                @click:append-inner="revealPass = !revealPass"
               />
             </v-col>
             <v-col cols="12" md="8" class="pt-0">
               <v-text-field
                 v-model="newPassword"
-                type="password"
                 label="New Password"
                 variant="outlined"
                 :disabled="passwordUpdating"
                 hide-details
                 :rules="rules.pass"
+                :append-inner-icon="
+                  revealPass ? 'mdi mdi-eye-closed' : 'mdi mdi-eye-outline'
+                "
+                :type="revealPass ? 'text' : 'password'"
+                @click:append-inner="revealPass = !revealPass"
               />
               <div class="text-caption mt-1 pl-1">
                 <div :class="hasCapitalLetter ? 'text-success' : 'text-error'">
@@ -149,6 +162,7 @@ const updatePassword = async () => {
                 label="Confirm New Password"
                 variant="outlined"
                 :disabled="passwordUpdating"
+                :rules="rules.confirm_pass"
             /></v-col>
             <v-col cols="12" class="pt-0 text-center"
               ><v-btn
@@ -157,7 +171,6 @@ const updatePassword = async () => {
                 @click="updatePassword"
                 :loading="passwordUpdating"
                 :disabled="passwordUpdating"
-                :rules="rules.confirm_pass"
               >
                 Change Password
               </v-btn>

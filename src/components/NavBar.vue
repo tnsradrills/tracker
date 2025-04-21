@@ -25,6 +25,10 @@ const navItems = [
 const logout = async () => {
   await userStore.signOut();
   router.push("/");
+  userStore.userData.id = null;
+  userStore.userData.display_name = null;
+  userStore.userData.region_id = null;
+  userStore.userData.runs = [];
 };
 </script>
 

@@ -9,7 +9,7 @@ const snackbarStore = useSnackbarStore();
 const discordName = ref(null);
 const password = ref(null);
 const loginForm = ref(null);
-
+const loading = ref(false);
 const emit = defineEmits(["backToMain"]);
 const rules = reactive({
   username: [(v) => !!v || "Your username is required."],
@@ -23,12 +23,14 @@ const tryLogin = async () => {
   if (!valid) {
     return;
   }
+  loading.value = true;
   const result = await userStore.loginUser(discordName.value, password.value);
 
   if (!result.success) {
     snackbarStore.addSnackbar(result.message, "red-lighten-1", -1);
   } else {
     router.push({ name: "Dashboard" });
+    loading.value = false;
   }
 };
 </script>
@@ -70,7 +72,15 @@ const tryLogin = async () => {
         <v-btn size="large" @click="emit('backToMain')"> Back </v-btn>
       </v-col>
       <v-col cols="auto">
-        <v-btn size="large" color="primary" @click="tryLogin"> Login </v-btn>
+        <v-btn
+          size="large"
+          color="primary"
+          @click="tryLogin"
+          :disabled="loading"
+          :loading="loading"
+        >
+          Login
+        </v-btn>
       </v-col>
     </v-row>
   </div>
