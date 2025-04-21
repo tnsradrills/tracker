@@ -121,11 +121,11 @@ export const useUserStore = defineStore("user", () => {
 
     if (session && session.user) {
       userData.id = session.user.id;
+      const email = session.user.email;
+      if (email && email.endsWith("@placeholder.xyz")) {
+        userData.username = email.replace("@placeholder.xyz", "");
+      }
       await fetchProfile();
-    }
-    const email = session.user.email;
-    if (email && email.endsWith("@placeholder.xyz")) {
-      userData.username = email.replace("@placeholder.xyz", "");
     }
   };
 
