@@ -12,7 +12,10 @@ const scoreRules = computed(() => [
     parseFloat(v) <= runRecorder.currentExercise?.max_points ||
     `Score cannot exceed ${runRecorder.currentExercise?.max_points} points.`,
 ]);
-const timeRules = [(v) => (v !== null && v !== "") || "Time cannot be empty."];
+const timeRules = [
+  (v) => (v !== null && v !== "") || "Time cannot be empty.",
+  (v) => !isNaN(parseFloat(v)) || "Time must be a number.",
+];
 watch(
   () => runRecorder.currentIndex,
   () => {

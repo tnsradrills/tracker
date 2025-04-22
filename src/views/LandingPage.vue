@@ -88,5 +88,8 @@ onMounted(() => {
 <style scoped>
 .landing-background {
   background: linear-gradient(135deg, #ffb0b0, #b6e0f8);
+  min-height: 100vh; /* ⬅ ensures full height even if parent doesn't stretch */
+  display: flex;
+  flex-direction: column;
 }
 </style>

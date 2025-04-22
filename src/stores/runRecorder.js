@@ -51,7 +51,6 @@ export const useRunRecorderStore = defineStore("runRecorder", () => {
 
   const submitRun = async () => {
     const userStore = useUserStore();
-
     if (
       !userStore.userData.alt ||
       !groupId.value ||

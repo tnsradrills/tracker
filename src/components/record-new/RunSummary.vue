@@ -78,49 +78,63 @@ const cancel = () => {
 
 <template>
   <v-card class="mt-4" elevation="2">
-    <v-card-title class="text-h6 font-weight-bold d-flex"
-      ><div>Review Your Results</div>
-      <v-spacer></v-spacer>
-      <v-btn color="red" variant="outlined" @click="cancel">Cancel Run</v-btn>
+    <v-card-title class="text-h6 font-weight-bold d-flex">
+      <v-row class="mt-0">
+        <v-col class="py-0" cols="12" sm="auto">Review Your Results</v-col>
+        <v-spacer></v-spacer>
+        <v-col class="pt-0" cols="12" sm="auto"
+          ><v-btn
+            class="ml-md-5"
+            color="red"
+            size="x-small"
+            variant="outlined"
+            @click="cancel"
+            >Cancel Run</v-btn
+          ></v-col
+        >
+      </v-row>
     </v-card-title>
     <v-card-text>
-      <v-table>
-        <thead>
-          <tr>
-            <th>Exercise</th>
-            <th>Distance</th>
-            <th>Score</th>
-            <th>Max Score</th>
-            <th>Time (s)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(result, index) in editedResults" :key="index">
-            <td>{{ getExerciseName(result.exercise_id) }}</td>
-            <td>{{ getDistance(result.exercise_id) }} yards</td>
-            <td>
-              <v-text-field
-                v-model="editedResults[index].score"
-                type="number"
-                density="compact"
-                hide-details
-                :error="isScoreInvalid(result)"
-              />
-            </td>
-            <td>{{ getMaxScore(result.exercise_id) }}</td>
-            <td>
-              <v-text-field
-                v-model="editedResults[index].time_taken"
-                type="number"
-                density="compact"
-                hide-details
-                :disabled="hasParTime(result.exercise_id)"
-              />
-            </td>
-          </tr>
-        </tbody>
-      </v-table>
+      <div class="table-scroll-wrapper">
+        <v-table>
+          <thead>
+            <tr>
+              <th>Exercise</th>
+              <th>Distance</th>
+              <th>Score</th>
+              <th>Max Score</th>
+              <th>Time (s)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(result, index) in editedResults" :key="index">
+              <td>{{ getExerciseName(result.exercise_id) }}</td>
+              <td>{{ getDistance(result.exercise_id) }} yards</td>
+              <td>
+                <v-text-field
+                  v-model="editedResults[index].score"
+                  type="number"
+                  density="compact"
+                  hide-details
+                  :error="isScoreInvalid(result)"
+                />
+              </td>
+              <td>{{ getMaxScore(result.exercise_id) }}</td>
+              <td>
+                <v-text-field
+                  v-model="editedResults[index].time_taken"
+                  type="number"
+                  density="compact"
+                  hide-details
+                  :disabled="hasParTime(result.exercise_id)"
+                />
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </div>
     </v-card-text>
+
     <v-card-actions>
       <v-btn @click="edit" variant="outlined">Back to exercises</v-btn>
       <v-spacer />
@@ -128,3 +142,14 @@ const cancel = () => {
     </v-card-actions>
   </v-card>
 </template>
+
+<style scoped>
+.table-scroll-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-scroll-wrapper > .v-table {
+  min-width: 600px; /* ensure horizontal scroll is triggered */
+}
+</style>
