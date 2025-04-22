@@ -96,12 +96,10 @@ export const useUserStore = defineStore("user", () => {
         message: "There was a problem with user creation.",
       };
     }
-
-    userData.id = userId;
-    userData.display_name = displayName;
-    userData.region_id = regionId;
+    userData.id = signUpData.user.id;
     userData.username = hashed;
     userData.runs = [];
+    fetchProfile();
 
     return { success: true };
   };
