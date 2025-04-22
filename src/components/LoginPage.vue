@@ -76,6 +76,7 @@ const tryLogin = async () => {
           size="large"
           color="primary"
           @click="tryLogin"
+          @keyup.enter="tryLogin"
           :disabled="loading"
           :loading="loading"
         >

@@ -96,7 +96,7 @@ const runSummaryRows = computed(() =>
 
       return {
         ...r,
-        hit_factor: par ? (score / time).toFixed(2) : null,
+        hit_factor: time ? (score / time).toFixed(2) : null,
         baseline_hf: par && max ? (max / par).toFixed(2) : null,
       };
     });

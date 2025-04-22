@@ -147,6 +147,7 @@ const trySignup = async () => {
                 size="large"
                 color="primary"
                 @click="trySignup"
+                @keyup.enter="trySignup"
                 :disabled="loading"
                 :loading="loading"
               >

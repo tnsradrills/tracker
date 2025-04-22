@@ -89,6 +89,7 @@ const timeDisplay = (item) => {
                   </template>
                   <template #item.hit_factor="{ item }">
                     <span
+                      v-if="item.exercises?.par_time"
                       class="font-weight-bold"
                       :class="
                         item.hit_factor >= item.baseline_hf
@@ -97,6 +98,12 @@ const timeDisplay = (item) => {
                       "
                       >{{ item.hit_factor }}</span
                     >
+                    <span v-else class="font-weight-bold">{{
+                      item.hit_factor
+                    }}</span>
+                  </template>
+                  <template #item.baseline_hf="{ item }">
+                    {{ item.baseline_hf ?? "No Par Set" }}
                   </template>
                 </v-data-table>
               </v-card-text>
