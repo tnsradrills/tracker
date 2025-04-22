@@ -68,10 +68,8 @@ export const useRunRecorderStore = defineStore("runRecorder", () => {
     if (error) {
       throw new Error("Failed to submit run transactionally.");
     }
-
     groupId.value = null;
     currentIndex.value = 0;
-    results.value = [];
 
     userStore.fetchRuns();
 

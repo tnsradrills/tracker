@@ -64,6 +64,10 @@ const cancel = () => {
         </v-card-subtitle>
         <v-card-text>
           <div class="text-subtitle-1">
+            <strong>Round Count:</strong>
+            {{ runRecorder.currentExercise.rounds }}
+          </div>
+          <div class="text-subtitle-1">
             <strong>Distance:</strong>
             {{ runRecorder.currentExercise.distance_yards }} yards
           </div>
@@ -113,11 +117,7 @@ const cancel = () => {
                   :rules="scoreRules"
                 />
               </v-col>
-              <v-col
-                cols="12"
-                md="6"
-                v-if="runRecorder.currentExercise?.par_time"
-              >
+              <v-col cols="12" md="6">
                 <v-text-field
                   v-model="timeTaken"
                   label="Time (seconds)"

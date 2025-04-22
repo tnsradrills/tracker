@@ -47,6 +47,7 @@ const showSummary = () => {
 const submitRunComplete = () => {
   recordingRun.value = false;
   reviewing.value = false;
+  runRecorderStore.results.value = [];
   redirectToDash();
 };
 
@@ -106,7 +107,7 @@ const cancelFromSummary = () => {
           </v-col>
         </v-row>
 
-        <v-row justify="center" class="pb-5">
+        <v-row justify="space-around" class="pb-5">
           <v-btn @click="redirectToDash" class="mr-3">Cancel</v-btn>
           <v-btn @click="startRun" color="primary" v-if="selectedGroup"
             >Start</v-btn

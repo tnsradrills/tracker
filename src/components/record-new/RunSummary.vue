@@ -15,6 +15,8 @@ const props = defineProps({
   },
 });
 
+const saving = ref(false);
+
 const emit = defineEmits(["submit", "edit", "cancel"]);
 
 const editedResults = ref([...props.results]);
@@ -29,13 +31,6 @@ const getExerciseName = (id) => {
 
 const getMaxScore = (id) => {
   return props.exercises.find((e) => e.id === id)?.max_points || "Unknown";
-};
-
-const hasParTime = (id) => {
-  if (props.exercises.find((e) => e.id === id)?.par_time > 0) {
-    return false;
-  }
-  return true;
 };
 
 const isScoreInvalid = (result) => {
@@ -58,12 +53,15 @@ const confirm = async () => {
   }
   try {
     // Overwrite results in the store
+    saving.value = true;
     runRecorderStore.results = [...editedResults.value];
     await runRecorderStore.submitRun();
     emit("submitted");
   } catch (error) {
     console.error("Error submitting run:", error.message);
     alert("There was an error submitting your run. Please try again.");
+  } finally {
+    saving.value = false;
   }
 };
 
@@ -89,12 +87,13 @@ const cancel = () => {
             size="x-small"
             variant="outlined"
             @click="cancel"
+            :disabled="saving"
             >Cancel Run</v-btn
           ></v-col
         >
       </v-row>
     </v-card-title>
-    <v-card-text>
+    <v-card-text v-if="!saving">
       <div class="table-scroll-wrapper">
         <v-table>
           <thead>
@@ -126,7 +125,6 @@ const cancel = () => {
                   type="number"
                   density="compact"
                   hide-details
-                  :disabled="hasParTime(result.exercise_id)"
                 />
               </td>
             </tr>
@@ -135,10 +133,27 @@ const cancel = () => {
       </div>
     </v-card-text>
 
+    <v-card-text v-if="saving">
+      <v-row justify="center" class="mt-8">
+        <v-col cols="10" md="6">
+          <v-progress-linear indeterminate></v-progress-linear>
+        </v-col>
+      </v-row>
+    </v-card-text>
+
     <v-card-actions>
-      <v-btn @click="edit" variant="outlined">Back to exercises</v-btn>
+      <v-btn @click="edit" variant="outlined" :disabled="saving"
+        >Back to exercises</v-btn
+      >
       <v-spacer />
-      <v-btn @click="confirm" variant="outlined" color="primary">Submit</v-btn>
+      <v-btn
+        @click="confirm"
+        variant="outlined"
+        color="primary"
+        :disabled="saving"
+        :loading="saving"
+        >Submit</v-btn
+      >
     </v-card-actions>
   </v-card>
 </template>
