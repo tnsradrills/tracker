@@ -114,6 +114,7 @@ const runSummaryRows = computed(() =>
       total_score: scoreTotal.toFixed(2),
       total_score_percentage: scorePercent,
       max_possible_score: maxTotal.toFixed(2),
+      total_time: timeTotal.toFixed(2),
       total_hit_factor: hitFactor.toFixed(2),
       original: { ...run, run_results: results },
     };

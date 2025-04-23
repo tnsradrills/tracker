@@ -15,6 +15,8 @@ const headers = [
   { title: "Date", value: "created_at_unix", sortable: true },
   { title: "Exercise Group", value: "group_name", sortable: true },
   { title: "Total Score", value: "total_score", sortable: true },
+  { title: "Total Time", value: "total_time", sortable: true },
+  { title: "Total Hit Factor", value: "total_hit_factor", sortable: true },
 ];
 
 const expandedTableRows = ref([]);
