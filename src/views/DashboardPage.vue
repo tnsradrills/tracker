@@ -142,15 +142,26 @@ onMounted(() => {
           />
         </v-col>
       </v-row>
-      <v-row justify="center" v-if="runSummaryRows.length == 0">
+      <v-row justify="center" v-if="runSummaryRows.length === 0">
         <v-col cols="12" md="8">
           <v-card>
-            <v-card-title>Welcome! We're glad you're here.</v-card-title>
+            <v-card-title>
+              <template v-if="userStore.userData.runs.length === 0">
+                Welcome! We're glad you're here.
+              </template>
+              <template v-else> No runs yet for this exercise group. </template>
+            </v-card-title>
             <v-card-text>
-              When you're ready, you'll find a link to record your first
-              exercise group run in the top right corner. This site will keep
-              track of the last 10 runs you performed for all of the exercise
-              groups above so you can see your progress over time.
+              <template v-if="userStore.userData.runs.length === 0">
+                When you're ready, you'll find a link to record your first
+                exercise group run in the top right corner. This site will keep
+                track of the last 10 runs you performed for all of the exercise
+                groups above so you can see your progress over time.
+              </template>
+              <template v-else>
+                Try completing this group to start tracking your progress for
+                it!
+              </template>
             </v-card-text>
           </v-card>
         </v-col>
