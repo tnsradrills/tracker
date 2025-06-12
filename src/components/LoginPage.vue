@@ -30,8 +30,8 @@ const tryLogin = async () => {
     snackbarStore.addSnackbar(result.message, "red-lighten-1", -1);
   } else {
     router.push({ name: "Dashboard" });
-    loading.value = false;
   }
+  loading.value = false;
 };
 </script>
 
